@@ -1,0 +1,20 @@
+Binary Analysis Summary
+=======================
+
+File: MH8114F_MH8115F_ES1212_flash-20260413-143030.bin
+Architecture: SuperH
+Address Size: 32 bit
+Endianness: true (big endian)
+Compiler: default
+
+Functions:
+  Total: 1736
+  External: 0
+  Thunks: 0
+  User-defined: 1736
+
+Memory Sections:
+  ROM: 00000000 - 0013ffff (1310720 bytes) [X] [R]
+  EEPROM: 00140000 - 00147fff (32768 bytes) [W] [R]
+  RAM: fff80000 - fffdffff (393216 bytes) [X] [W] [R]
+  IO_PERIPH: fffe0000 - ffffffff (131072 bytes) [W] [R]

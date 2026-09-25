@@ -1,0 +1,64 @@
+Interesting Functions and Patterns
+===================================
+
+[CRYPT related]
+  UTIL_Decrypt_FUN_00031bf6 @ 00031bf6
+  IMMO_FLAGS_decrypt_FUN_00072d2c @ 00072d2c
+  Immo_Crypto_State_Engine_FUN_0009d47c @ 0009d47c
+
+[DECRYPT related]
+  UTIL_Decrypt_FUN_00031bf6 @ 00031bf6
+  IMMO_FLAGS_decrypt_FUN_00072d2c @ 00072d2c
+
+[SHA related]
+  DTC_Polling_Shadow_Synchronization_Loop_00088d0c @ 00088d0c
+  DTC_Update_Shadow_Data_FUN_000891d8 @ 000891d8
+  DTC_Clear_Shadow_Data_FUN_0008945a @ 0008945a
+  Immo_Handshake_State_Step_FUN_0009d192 @ 0009d192
+  Immo_Handshake_ValidateAndUpdate_FUN_0009d330 @ 0009d330
+
+[KEY related]
+  A0_Immo_Seed_Key_HandlerFUN_00003630 @ 00003630
+  Seed_key_FUN_0000587e @ 0000587e
+  Util_seed_key_FUN_00005b3c @ 00005b3c
+  Util_clear_seed_key_FUN_00005b4a @ 00005b4a
+
+[SEND related]
+  CAN_Sender_FUN_00006818 @ 00006818
+
+[RECV related]
+  CAN_RECV_VALID_FUN_000c5f3e @ 000c5f3e
+
+[READ related]
+  N20N1_J_DIAG_Read_FUN_0000095c @ 0000095c
+  DIAG_Handler_ReadDTCs_FUN_000030bc @ 000030bc
+  DIAG_Read_Base_Status_FUN_00005072 @ 00005072
+  DIAG_Read_Status_80002_FUN_000053a4 @ 000053a4
+  CAN_Mailbox_Ready_Check_FUN_00006d9c @ 00006d9c
+  D1_Flash_Diag_Readiness_CheckFUN_00007c24 @ 00007c24
+  init_Read_Config_Fields_FUN_0001453a @ 0001453a
+  Severity_Readiness_check_FUN_00032284 @ 00032284
+  I4_Immo_Security_Flag_Read_FUN_0007530e @ 0007530e
+  KWP_Handler_ReadECUID_01_FUN_000b1888 @ 000b1888
+  KWP_Handler_Read_DTC_FUN_000b1f34 @ 000b1f34
+  KWP_Handler_ReadDataByLocalID_04_FUN_000b2840 @ 000b2840
+  DTC_Read_Handler_FUN_000b31b0 @ 000b31b0
+
+[WRITE related]
+  DTC_Write_Config_Fields_RAM_FUN_00014508 @ 00014508
+  KWP_Handler_WriteDataByLocalID_09_FUN_000b2be0 @ 000b2be0
+  N22_DECODE_WRITE_DAT_FUN_000be7ce @ 000be7ce
+
+[SYSTEM related]
+  DIAG_Subsystem_Reset_Init_FUN_00014bcc @ 00014bcc
+  Subsystem_Init_Timeouts_FUN_0007e8b8 @ 0007e8b8
+  N19_Subsystem_StateMachine_Handler_FUN_00089da8 @ 00089da8
+
+[MEMCPY related]
+  memcpy_FUN_00003568 @ 00003568
+  memcpy_FUN_00003590 @ 00003590
+  memcpy_FUN_000035b0 @ 000035b0
+  memcpy_FUN_000035d0 @ 000035d0
+  memcpy_FUN_00014bb0 @ 00014bb0
+
+[POTENTIALLY DANGEROUS FUNCTIONS]
