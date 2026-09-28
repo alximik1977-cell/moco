@@ -1,0 +1,6 @@
+model_list:
+  - model_name: gigachat
+    litellm_params:
+      model: openai/GigaChat-3-Ultra
+      api_base: https://gigachat.devices.sberbank.ru/api/v1
+      api_key: os.environ/GIGACHAT_TOKEN
