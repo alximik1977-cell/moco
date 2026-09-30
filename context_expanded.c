@@ -10,11 +10,19 @@
 // ═══════════════════════════════════════════════════════════
 
 // ═══ [1/7] 0000_0_TBR_1_FUN_00005da0 @ 0x00005da0 ═══
+// Функция инициализации системы и запуска основного приложения.
+// Условия вызова следующей функции неизвестны, так как тело функции отсутствует.
+// Использует периферийные регистры для настройки аппаратного обеспечения.
+
 // Сигнатура: undefined 0000_0_TBR_1_FUN_00005da0()
 // Вызывает: FUN_0000112e, O_I_Polling_Timer_Setup_FUN_00005f40, M_0_FUN_00010a00, Watchdog_init_FUN_00000b00, init_hardwareFUN_00005de8, Watchdog_Hardware_Poll_Debounce_FUN_00005f6e, A0_DTC_INIT_FUN_0000151e, init_mem_clearFUN_00005ee6, FUN_00000ba0, M0_Start_FUN_00030a00, UTIL_checksums8_FUN_0000117a, CAN_init_mailboxFUN_00005efc, init_hardware_busFUN_00005e36
 // ⚠️ Тело не найдено
 
 // ═══ [2/7] M0_Start_FUN_00030a00 @ 0x00030a00 ═══
+// Запускает начальную последовательность выполнения программы.
+// Всегда вызывает M1_START_FUN_00030c2c без условий.
+// Не использует периферийные регистры или другую периферию.
+
 // Сигнатура: undefined M0_Start_FUN_00030a00()
 // Вызывает: M1_START_FUN_00030c2c
 
@@ -26,6 +34,11 @@ void M0_Start_FUN_00030a00(void)
 }
 
 // ═══ [3/7] M1_START_FUN_00030c2c @ 0x00030c2c ═══
+// Выполняет очистку глобальных переменных и запускает основное приложение.
+// Сначала очищает три глобальные переменные с помощью M2_clear_3_globals_FUN_000becdc,
+// затем всегда вызывает M2_MAIN_app_FUN_000a9148.
+// Не использует периферийные регистры или другую периферию.
+
 // Сигнатура: undefined M1_START_FUN_00030c2c()
 // Вызывает: M2_clear_3_globals_FUN_000becdc, M2_MAIN_app_FUN_000a9148
 
@@ -38,6 +51,11 @@ void M1_START_FUN_00030c2c(void)
 }
 
 // ═══ [4/7] M2_MAIN_app_FUN_000a9148 @ 0x000a9148 ═══
+// Основная функция приложения, выполняющая цикл задач и обработку состояний.
+// Циклически выполняет различные подзадачи и проверяет состояние флагов.
+// Продолжает выполнение бесконечно, пока условие (IMMO_FLAGS_CONF_DAT_fff84540 & 2) == 0 остается истинным.
+// Использует множество периферийных регистров для управления состоянием и синхронизации.
+
 // Сигнатура: undefined M2_MAIN_app_FUN_000a9148()
 // Вызывает: N8_bits_check_FUN_00094942, N19_Subsystem_StateMachine_Handler_FUN_00089da8, N18_Math_Util_Dtc_set_flags_FUN_000718ea, N17_MAIN_SHED_IMMO_INIT_FUN_000af9b4, N22_DECODE_WRITE_DAT_FUN_000be7ce, N11_State_control_FUN_00091dcc, N1_init_DTC_CALC_STORE_FUN_000949ac, N12_Iz_Immo_Security_Flag_INIT_FUN_000a9718, N6_flags_init_FUN_0006000a, N10_ECU_initialization_sequenceFUN_000abf52, N23_DAT_UTIL_FUN_000bef78, N21_FLAGS_Handler_FUN_000be6a8, N3_init_dataRegisters_FUN_000c3230, N20_DTC_BODY_REMOVE__FUN_000896ca, N15_INIT_routine_FUN_00095788, N5_delay_synchro_FUN_000c3388, N13_INIT_FUN_0008a398, N14_CALL_TBRs_FUN_0008c848, N4_init_Status_Register_FUN_00000baa, N7_copy_init_config_FUN_000a9270, N16_IMMO_FUEL_LAMBDA_FUN_0009c420, N9_other_FUN_0006cb72, N2_init_RAM_FUN_000befc8
 
@@ -86,6 +104,11 @@ void M2_MAIN_app_FUN_000a9148(void)
 }
 
 // ═══ [5/7] N18_Math_Util_Dtc_set_flags_FUN_000718ea @ 0x000718ea ═══
+// Устанавливает флаги диагностики и состояния системы.
+// Последовательно вызывает ряд вспомогательных функций для обработки различных аспектов состояния системы.
+// Не имеет явных условий вызова следующей функции, так как все вызовы последовательны.
+// Использует несколько периферийных регистров для хранения промежуточных результатов и проверки состояния.
+
 // Сигнатура: undefined N18_Math_Util_Dtc_set_flags_FUN_000718ea()
 // Вызывает: B_FUN_000800f0, B_FUN_0008638e, B_FUN_00088c50, MAIN_Sys_Init_Pending_FUN_00071ac0, IMMO_FLAGS_CONF_DAT_FUN_00080324, B_FUN_00062c9c, B_CAN_IMMO_DAT_FUN_000883a0, B_FUN_00088286, B_FUN_00071970, ECU_State_Flags_FUN_00072dae, B_FUN_00088254, DAT_INIT_COPY_FUN_00072ec8, IMMO_FLAGS_decrypt_FUN_00072d2c
 
@@ -109,6 +132,10 @@ void N18_Math_Util_Dtc_set_flags_FUN_000718ea(void)
 }
 
 // ═══ [6/7] B_FUN_000800f0 @ 0x000800f0 ═══
+// Обновляет состояние иммобилайзера и обрабатывает флаги безопасности.
+// Проверяет условия для обновления регистра DAT_fff84ed4 и вызывает Immo_StateSyncAndCleanup_FUN_000b4dd8 при необходимости.
+// Использует периферийный регистр DAT_fff84ed4 для хранения текущего состояния.
+
 // Сигнатура: undefined B_FUN_000800f0()
 // Вызывает: Immo_StateSyncAndCleanup_FUN_000b4dd8
 
@@ -166,6 +193,10 @@ LAB_000802fa:
 }
 
 // ═══ [7/7] Immo_StateSyncAndCleanup_FUN_000b4dd8 @ 0x000b4dd8 ═══
+// Синхронизирует состояние иммобилайзера и очищает временные данные.
+// Очищает определенные регистры и устанавливает значения по умолчанию после завершения начальной последовательности.
+// Использует множество периферийных регистров для очистки данных и сброса состояния.
+
 // Сигнатура: undefined Immo_StateSyncAndCleanup_FUN_000b4dd8()
 
 void Immo_StateSyncAndCleanup_FUN_000b4dd8(void)
