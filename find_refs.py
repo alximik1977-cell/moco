@@ -23,6 +23,8 @@ def find_references(func_name):
     for i, line in enumerate(lines, 1):
         if pattern.search(line):
             results.append((i, line.rstrip()))
+            print(f"Line {i}: {line.rstrip()}")
+    print(f"Found {len(results)} references")
     
     return results
 

@@ -1100,7 +1100,7 @@ def cmd_chat(conn, args):
         except (EOFError, KeyboardInterrupt):
             print()
             break
-        if not user or user.lower() in ("exit", "quit"):
+        if not user or user.lower() in ("exit", "quit", "stop"):
             break
 
         messages.append({"role": "user", "content": user})
