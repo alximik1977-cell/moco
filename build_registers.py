@@ -1,7 +1,13 @@
 #!/usr/bin/env python3
 """
 Создаёт JSON с описанием регистров/переменных данных и функциями, которые к ним обращаются.
-Исключает служебные имена Ghidra: extraout_rX, unaff_rX, local_X, uVarX и т.д.
+Поддерживает ЛЮБЫЕ имена: DAT_xxx, PTR_xxx, s_xxx, CAN_STATUS, IMMO_FLAGS_CONF_DAT_xxx, и т.д.
+
+Источники данных:
+  1. Глобальные объявления переменных (в начале C-файла и между функциями)
+  2. Использование идентификаторов в телах функций
+  3. Комментарии Ghidra (адреса, типы)
+  4. 🔧 НОВОЕ: Все идентификаторы в телах функций, похожие на регистры
 """
 import json
 import re
@@ -28,7 +34,19 @@ C_KEYWORDS = {
 # Префиксы функций (не данные)
 NON_DATA_PREFIXES = ('FUN_',)
 
-# Префиксы, указывающие на тип данных
+# 🔧 НОВОЕ: Служебные имена Ghidra — НЕ являются регистрами данных
+GHIDRA_VIRTUAL_PREFIXES = (
+    'extraout_', 'unaff_', 'in_stack_', 'Stack_', 'undef_',
+)
+
+GHIDRA_VIRTUAL_PATTERNS = (
+    re.compile(r'^(u|i|b|c|f|d|p|s)Var\d+$'),
+    re.compile(r'^(in|out)_[a-z]\w+$'),
+    re.compile(r'^local_[a-zA-Z0-9_]+$'),
+    re.compile(r'^(extra|unaff|undef)_[a-zA-Z0-9_]+$'),
+)
+
+# 🔧 НОВОЕ: Префиксы, указывающие на тип данных (расширенный список)
 DATA_PREFIXES = {
     'DAT_': 'data',
     'PTR_': 'pointer',
@@ -41,21 +59,17 @@ DATA_PREFIXES = {
     'f_':   'float_data',
 }
 
-# 🔧 Служебные имена Ghidra — НЕ являются регистрами данных
-GHIDRA_VIRTUAL_PREFIXES = (
-    'extraout_',    # виртуальные выходы регистров (extraout_r0, extraout_mach)
-    'unaff_',       # неинициализированные регистры (unaff_r4, unaff_gbr)
-    'in_stack_',    # параметры в стеке
-    'Stack_',       # стековые переменные
-    'undef_',       # неопределённые
-)
-
-GHIDRA_VIRTUAL_PATTERNS = (
-    re.compile(r'^(u|i|b|c|f|d|p|s)Var\d+$'),     # uVar1, iVar2, ...
-    re.compile(r'^(in|out)_[a-z]\w+$'),            # in_r4, out_r0
-    re.compile(r'^local_[a-zA-Z0-9_]+$'),          # local_10, local_res10
-    re.compile(r'^(extra|unaff|undef)_[a-zA-Z0-9_]+$'),
-)
+# 🔧 НОВОЕ: Известные смысловые префиксы из прошивки
+KNOWN_MEANINGFUL_PREFIXES = {
+    'IMMO', 'CAN', 'UART', 'SPI', 'I2C', 'ADC', 'PWM', 'TIMER', 'DTC',
+    'FUEL', 'IGN', 'INJ', 'LAMBDA', 'O2', 'MAP', 'MAF', 'TPS', 'IAT', 'ECT',
+    'VSS', 'RPM', 'KNOCK', 'EGR', 'VVT', 'IDLE', 'AC', 'FAN', 'RELAY',
+    'EEPROM', 'FLASH', 'RAM', 'ROM', 'DIAG', 'SECURITY', 'CONFIG',
+    'STATUS', 'FLAG', 'FLAGS', 'STATE', 'MODE', 'COUNTER', 'TIMER',
+    'BLOCK', 'NORM', 'INIT', 'WATCHDOG', 'UTIL', 'MAIN', 'MON',
+    'A0', 'A2', 'A7', 'A8', 'B1', 'B2', 'C1', 'C3', 'M0', 'M1', 'M2',
+    'N4', 'N16',
+}
 
 
 def is_ghidra_virtual(name):
@@ -66,6 +80,54 @@ def is_ghidra_virtual(name):
     for pattern in GHIDRA_VIRTUAL_PATTERNS:
         if pattern.match(name):
             return True
+    return False
+
+
+def looks_like_register(name):
+    """
+    🔧 НОВОЕ: Определяет, похоже ли имя на регистр/переменную данных.
+    Это эвристика, которая отсеивает случайные идентификаторы.
+    """
+    if not name or len(name) < 3:
+        return False
+    
+    # Ключевые слова
+    if name in C_KEYWORDS:
+        return False
+    
+    # Служебные имена Ghidra
+    if is_ghidra_virtual(name):
+        return False
+    
+    # Имена функций
+    if any(name.startswith(p) for p in NON_DATA_PREFIXES):
+        return False
+    
+    # Стандартные префиксы данных
+    if any(name.startswith(p) for p in DATA_PREFIXES.keys()):
+        return True
+    
+    # 🔧 НОВОЕ: Содержит DAT_, PTR_ в середине (составные имена)
+    if re.search(r'_(DAT|PTR|s|c)_', name):
+        return True
+    
+    # 🔧 НОВОЕ: Содержит известный смысловой префикс
+    parts = name.split('_')
+    if any(p.upper() in KNOWN_MEANINGFUL_PREFIXES for p in parts):
+        return True
+    
+    # 🔧 НОВОЕ: Имя в верхнем регистре с подчёркиваниями (типичный стиль для регистров)
+    if name.isupper() and '_' in name and len(name) > 5:
+        return True
+    
+    # 🔧 НОВОЕ: Имя содержит hex-адрес (8 цифр)
+    if re.search(r'[0-9a-fA-F]{8}', name):
+        return True
+    
+    # 🔧 НОВОЕ: Имя начинается с заглавной буквы и содержит подчёркивания
+    if name[0].isupper() and '_' in name and len(parts) >= 2:
+        return True
+    
     return False
 
 
@@ -146,6 +208,7 @@ def parse_c_file(c_text):
                 continue
         
         # Глобальное объявление переменной
+        # 🔧 ИСПРАВЛЕНО: более широкий паттерн, принимает имена с цифрами в начале
         global_pattern = re.compile(
             r'^\s*([\w\s\*]+?)\s+([A-Za-z_][A-Za-z0-9_]*)\s*'
             r'(?:\[\s*(\d*)\s*\])?\s*'
@@ -163,7 +226,6 @@ def parse_c_file(c_text):
             if any(var_name.startswith(p) for p in NON_DATA_PREFIXES):
                 i += 1
                 continue
-            # 🔧 Фильтр служебных имён Ghidra
             if is_ghidra_virtual(var_name):
                 i += 1
                 continue
@@ -210,7 +272,10 @@ def guess_type_size(type_str):
 
 
 def find_identifiers_in_body(body, known_globals, known_functions):
-    """Находит все идентификаторы-регистры в теле функции."""
+    """
+    🔧 ИСПРАВЛЕНО: Находит ВСЕ идентификаторы, похожие на регистры.
+    Больше не ограничивается префиксами DAT_, PTR_ и т.д.
+    """
     local_vars = set()
     
     # Локальные переменные Ghidra
@@ -240,14 +305,14 @@ def find_identifiers_in_body(body, known_globals, known_functions):
             continue
         if name in known_functions:
             continue
-        # 🔧 Фильтр служебных имён Ghidra
         if is_ghidra_virtual(name):
             continue
         # Вызов функции — не регистр
         if m.end() < len(body) and body[m.end():m.end()+1] == '(':
             continue
         
-        if name in known_globals or name.startswith(('DAT_', 'PTR_', 's_', 'c_', 'au_', 'a_')):
+        # 🔧 ИСПРАВЛЕНО: используем эвристику вместо жёсткого списка префиксов
+        if name in known_globals or looks_like_register(name):
             found.add(name)
     
     return found
@@ -331,6 +396,24 @@ def classify_by_name(name):
         return 'state_variable'
     if any(p in name_lower for p in ['timer', 'tmr']):
         return 'timer'
+    if any(p in name_lower for p in ['immo', 'immobilizer', 'security']):
+        return 'security'
+    if any(p in name_lower for p in ['fuel', 'inject', 'inj']):
+        return 'fuel_system'
+    if any(p in name_lower for p in ['ign', 'ignition']):
+        return 'ignition'
+    if any(p in name_lower for p in ['can']):
+        return 'can_bus'
+    if any(p in name_lower for p in ['uart']):
+        return 'uart'
+    if any(p in name_lower for p in ['adc']):
+        return 'adc'
+    if any(p in name_lower for p in ['pwm']):
+        return 'pwm'
+    if any(p in name_lower for p in ['lambda', 'o2']):
+        return 'lambda_control'
+    if any(p in name_lower for p in ['dtc', 'diag', 'diagnostic']):
+        return 'diagnostics'
     if any(p in name_lower for p in ['can', 'uart', 'spi', 'i2c', 'adc', 'pwm']):
         return 'peripheral_data'
     if name.startswith('g_') or name.startswith('g'):
@@ -362,13 +445,12 @@ def build_registers_json():
         'bodies': [],
     })
     
-    # 🔧 Счётчик отфильтрованных имён
     filtered_count = 0
+    new_regs_from_body = 0  # 🔧 НОВОЕ: счётчик регистров, найденных только в телах
     
     for func_name, func_data in parsed['functions'].items():
         body = func_data['body']
         
-        # Считаем, сколько служебных имён встретилось
         for m in re.finditer(r'\b(extraout_\w+|unaff_\w+|local_\w+|[uibcf dps]Var\d+|in_\w+|out_\w+)\b', body):
             filtered_count += 1
         
@@ -379,8 +461,13 @@ def build_registers_json():
             registers[reg_name]['bodies'].append(body)
             access = analyze_access(reg_name, body)
             registers[reg_name]['access'].update(access)
+            
+            # 🔧 НОВОЕ: считаем регистры, которых нет в глобальных объявлениях
+            if reg_name not in known_globals:
+                new_regs_from_body += 1
     
     print(f"   🗑️  Отфильтровано служебных имён Ghidra: {filtered_count}")
+    print(f"   🆕 Найдено регистров только в телах функций: {new_regs_from_body}")
     print(f"✅ Найдено {len(registers)} уникальных регистров/переменных")
     
     # Формируем выходной JSON
@@ -395,6 +482,13 @@ def build_registers_json():
         decl = parsed['globals'].get(name, {})
         
         addr = decl.get('address') or parsed['address_comments'].get(name)
+        
+        # 🔧 НОВОЕ: если адреса нет, пытаемся извлечь из имени
+        if not addr:
+            m = re.search(r'(?:DAT|PTR|s|c|au|a|u|i|f)_([0-9a-fA-F]{8})', name)
+            if m:
+                addr = m.group(1)
+        
         addr_int = None
         if addr:
             try:
@@ -442,6 +536,7 @@ def build_registers_json():
         "with_address": sum(1 for r in result["registers"] if r["address"] != "unknown"),
         "without_address": sum(1 for r in result["registers"] if r["address"] == "unknown"),
         "filtered_ghidra_virtual": filtered_count,
+        "found_only_in_bodies": new_regs_from_body,
         "by_kind": {},
         "by_region": {},
         "by_access": {"read": 0, "write": 0, "read_write": 0, "unknown": 0},
@@ -476,6 +571,7 @@ def build_registers_json():
     print(f"\n📊 Статистика:")
     print(f"   Всего регистров/переменных: {result['statistics']['total_registers']}")
     print(f"   Отфильтровано служебных имён: {result['statistics']['filtered_ghidra_virtual']}")
+    print(f"   Найдено только в телах функций: {result['statistics']['found_only_in_bodies']}")
     print(f"   С известным адресом: {result['statistics']['with_address']}")
     print(f"   Без адреса: {result['statistics']['without_address']}")
     print(f"   Массивов: {result['statistics']['arrays']}")
@@ -496,7 +592,7 @@ def build_registers_json():
     print(f"\n🔝 Топ-20 самых используемых:")
     for r in result['statistics']['most_referenced']:
         addr_str = f"0x{r['address']:>10s}" if r['address'] != 'unknown' else '         ?'
-        print(f"   {r['name']:30s} {addr_str}  ({r['reference_count']:3d} refs)  [{','.join(r['access'])}]  [{r['kind']}]")
+        print(f"   {r['name']:40s} {addr_str}  ({r['reference_count']:3d} refs)  [{','.join(r['access'])}]  [{r['kind']}]")
 
 
 if __name__ == "__main__":
