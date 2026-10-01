@@ -17,7 +17,7 @@ app = FastAPI()
 GIGACHAT_API_URL = "https://gigachat.api.sbercloud.ru/v1/chat/completions"
 
 # Модели GigaChat, которые вы хотите разрешить использовать
-ALLOWED_MODELS = ["GigaChat", "GigaChat-Evo-Light"] 
+ALLOWED_MODELS = ["GigaChat", "GigaChat-Evo-Light", "GigaChat-2", "GigaChat-Max", "GigaChat-3-Ultra"] 
 
 # --- Модели данных Pydantic для валидации запроса от aider ---
 class Message(BaseModel):

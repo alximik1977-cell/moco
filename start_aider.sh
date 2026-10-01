@@ -19,4 +19,9 @@ print(giga.get_token().access_token)
 export OPENAI_API_BASE="https://api.giga.chat/v1/models"
 export OPENAI_API_KEY="$TOKEN"
 
-aider --model openai/GigaChat-Max
+aider \
+  --openai-api-base https://api.giga.chat/v1 \
+  --model openai/GigaChat-2 \
+  --no-verify-ssl \
+  --no-show-model
+  

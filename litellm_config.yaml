@@ -1,6 +1,10 @@
 model_list:
   - model_name: gigachat
     litellm_params:
-      model: openai/GigaChat-3-Ultra
+      model: openai/GigaChat-Max
       api_base: https://gigachat.devices.sberbank.ru/api/v1
       api_key: os.environ/GIGACHAT_TOKEN
+      custom_llm_provider: openai
+litellm_settings:
+  ssl_verify: false
+  drop_params: true
